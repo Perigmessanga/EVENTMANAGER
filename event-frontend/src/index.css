@@ -1,0 +1,542 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 
+  TIKERAMA - Event Ticketing Platform for Côte d'Ivoire
+  Design System: Premium SaaS with West African fintech aesthetics
+  Benchmark: Stripe Dashboard, Eventbrite
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Core palette - Warm amber/gold with teal accents */
+    --background: 45 30% 98%;
+    --foreground: 30 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 30 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 30 20% 12%;
+
+    /* Primary - Warm Amber (prosperity, energy) */
+    --primary: 38 92% 50%;
+    --primary-foreground: 30 20% 8%;
+    --primary-hover: 38 92% 45%;
+    --primary-glow: 38 100% 60%;
+
+    /* Secondary - Deep Teal (trust, stability) */
+    --secondary: 173 58% 39%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 173 58% 34%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 30 10% 45%;
+
+    --accent: 173 40% 92%;
+    --accent-foreground: 173 58% 30%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Status colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 30 20% 8%;
+    --pending: 217 91% 60%;
+    --pending-foreground: 0 0% 100%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 38 92% 50%;
+
+    --radius: 0.75rem;
+
+    /* Enhanced Shadows - Enterprise grade */
+    --shadow-xs: 0 1px 2px 0 hsl(30 20% 12% / 0.03);
+    --shadow-sm: 0 1px 3px 0 hsl(30 20% 12% / 0.05), 0 1px 2px -1px hsl(30 20% 12% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(30 20% 12% / 0.07), 0 2px 4px -2px hsl(30 20% 12% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(30 20% 12% / 0.08), 0 4px 6px -4px hsl(30 20% 12% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(30 20% 12% / 0.1), 0 8px 10px -6px hsl(30 20% 12% / 0.05);
+    --shadow-2xl: 0 25px 50px -12px hsl(30 20% 12% / 0.25);
+    --shadow-glow: 0 0 40px hsl(38 92% 50% / 0.25);
+    --shadow-glow-lg: 0 0 60px hsl(38 92% 50% / 0.35);
+    --shadow-inner: inset 0 2px 4px 0 hsl(30 20% 12% / 0.05);
+    
+    /* Card shadows */
+    --shadow-card: 0 1px 3px 0 hsl(30 20% 12% / 0.04), 0 1px 2px -1px hsl(30 20% 12% / 0.04);
+    --shadow-card-hover: 0 10px 40px -10px hsl(30 20% 12% / 0.12), 0 4px 12px -4px hsl(30 20% 12% / 0.06);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(38 92% 50%), hsl(28 90% 45%));
+    --gradient-primary-hover: linear-gradient(135deg, hsl(38 92% 45%), hsl(28 90% 40%));
+    --gradient-hero: linear-gradient(180deg, hsl(45 30% 98%) 0%, hsl(40 40% 95%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(40 20% 99%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(40 20% 98%) 0%, hsl(40 30% 96%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(30 15% 10%) 0%, hsl(30 20% 8%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(0 0% 100% / 0.7));
+    --gradient-teal: linear-gradient(135deg, hsl(173 58% 39%), hsl(173 50% 30%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 60% 38%));
+
+    /* Chart colors */
+    --chart-1: 38 92% 50%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 142 71% 45%;
+    --chart-5: 280 65% 60%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 30 15% 6%;
+    --foreground: 40 20% 95%;
+
+    --card: 30 15% 9%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 30 15% 9%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 38 92% 55%;
+    --primary-foreground: 30 20% 8%;
+    --primary-hover: 38 92% 60%;
+    --primary-glow: 38 100% 65%;
+
+    --secondary: 173 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 30 15% 14%;
+    --muted-foreground: 40 15% 60%;
+
+    --accent: 173 30% 16%;
+    --accent-foreground: 173 50% 75%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 30 15% 18%;
+    --input: 30 15% 18%;
+    --ring: 38 92% 55%;
+
+    /* Dark mode shadows */
+    --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.25), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.25);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.35), 0 4px 6px -4px hsl(0 0% 0% / 0.25);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.4), 0 8px 10px -6px hsl(0 0% 0% / 0.25);
+    --shadow-glow: 0 0 40px hsl(38 92% 55% / 0.2);
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.2), 0 1px 2px -1px hsl(0 0% 0% / 0.15);
+    --shadow-card-hover: 0 10px 40px -10px hsl(0 0% 0% / 0.4), 0 4px 12px -4px hsl(0 0% 0% / 0.2);
+
+    /* Dark gradients */
+    --gradient-hero: linear-gradient(180deg, hsl(30 15% 6%) 0%, hsl(30 20% 4%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(30 15% 9%) 0%, hsl(30 15% 7%) 100%);
+    --gradient-subtle: linear-gradient(135deg, hsl(30 15% 10%) 0%, hsl(30 15% 7%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(30 15% 12% / 0.9), hsl(30 15% 8% / 0.7));
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom selection */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+}
+
+@layer components {
+  /* Enhanced Event Card Styles */
+  .event-card {
+    @apply bg-card rounded-xl overflow-hidden transition-all duration-300 border border-border/50;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .event-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    @apply -translate-y-1 border-border;
+  }
+
+  /* KPI / Stat Cards */
+  .stat-card {
+    @apply relative overflow-hidden bg-card rounded-xl border border-border/50 p-5 transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .stat-card:hover {
+    box-shadow: var(--shadow-md);
+    @apply border-border;
+  }
+
+  .stat-card::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-1 opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
+  }
+
+  .stat-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Dashboard widget */
+  .dashboard-widget {
+    @apply bg-card rounded-xl border border-border/50 overflow-hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .dashboard-widget-header {
+    @apply px-5 py-4 border-b border-border/50 flex items-center justify-between;
+  }
+
+  .dashboard-widget-content {
+    @apply p-5;
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .glass-strong {
+    @apply bg-card/90 backdrop-blur-xl border border-border;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Mobile Money Brand Colors */
+  .momo-orange {
+    @apply bg-[hsl(25_95%_53%)] text-white;
+  }
+  
+  .momo-mtn {
+    @apply bg-[hsl(48_100%_50%)] text-[hsl(30_20%_12%)];
+  }
+  
+  .momo-wave {
+    @apply bg-[hsl(199_89%_48%)] text-white;
+  }
+
+  /* Payment Status Badges */
+  .status-pending {
+    @apply bg-pending/10 text-pending border-pending/20;
+  }
+  
+  .status-success {
+    @apply bg-success/10 text-success border-success/20;
+  }
+  
+  .status-failed {
+    @apply bg-destructive/10 text-destructive border-destructive/20;
+  }
+
+  /* Enhanced Skeleton loading */
+  .skeleton-pulse {
+    @apply animate-pulse bg-gradient-to-r from-muted via-muted/70 to-muted bg-[length:200%_100%] rounded;
+  }
+
+  .skeleton-shimmer {
+    @apply relative overflow-hidden bg-muted rounded;
+  }
+
+  .skeleton-shimmer::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, hsl(var(--background) / 0.5), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* QR Code container */
+  .qr-container {
+    @apply bg-white p-4 rounded-xl inline-block;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Premium button styles */
+  .btn-premium {
+    @apply relative overflow-hidden;
+    background: var(--gradient-primary);
+    transition: all 0.3s ease;
+  }
+
+  .btn-premium:hover {
+    background: var(--gradient-primary-hover);
+    box-shadow: var(--shadow-glow);
+    @apply -translate-y-0.5;
+  }
+
+  .btn-premium::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity;
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.2), transparent);
+  }
+
+  .btn-premium:hover::after {
+    @apply opacity-100;
+  }
+
+  /* Category pills with micro-interaction */
+  .category-pill {
+    @apply px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200;
+  }
+
+  .category-pill-active {
+    @apply bg-primary text-primary-foreground;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
+  }
+
+  .category-pill-inactive {
+    @apply bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-primary/5;
+  }
+
+  /* Input focus ring */
+  .input-premium {
+    @apply transition-all duration-200;
+  }
+
+  .input-premium:focus {
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15);
+  }
+
+  /* Trend indicators */
+  .trend-up {
+    @apply text-success flex items-center gap-1;
+  }
+
+  .trend-down {
+    @apply text-destructive flex items-center gap-1;
+  }
+
+  /* Data table */
+  .data-table {
+    @apply w-full;
+  }
+
+  .data-table th {
+    @apply text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3 border-b border-border;
+  }
+
+  .data-table td {
+    @apply px-4 py-3 border-b border-border/50 text-sm;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-muted/50;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Gradient utilities */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-primary-hover:hover {
+    background: var(--gradient-primary-hover);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+
+  .gradient-teal {
+    background: var(--gradient-teal);
+  }
+
+  .gradient-glass {
+    background: var(--gradient-glass);
+  }
+
+  /* Shadow utilities */
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .shadow-glow-lg {
+    box-shadow: var(--shadow-glow-lg);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  
+  /* Low bandwidth optimizations */
+  .low-bandwidth-img {
+    @apply bg-muted;
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Micro-interactions */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+
+  .hover-scale:hover {
+    @apply scale-[1.02];
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Interactive link underline */
+  .link-underline {
+    @apply relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 origin-right transition-transform duration-300;
+  }
+
+  .link-underline:hover::after {
+    @apply scale-x-100 origin-left;
+  }
+
+  /* Focus visible ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  /* Stagger animation delay utilities */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+}
+
+/* Keyframe animations */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation utilities */
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+/* Chart container styling */
+.chart-container {
+  @apply relative;
+}
+
+.chart-container .recharts-cartesian-grid-horizontal line,
+.chart-container .recharts-cartesian-grid-vertical line {
+  stroke: hsl(var(--border));
+}
+
+.chart-container .recharts-tooltip-wrapper {
+  @apply !outline-none;
+}

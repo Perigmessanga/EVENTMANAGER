@@ -1,0 +1,7 @@
+.color-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+

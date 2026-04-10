@@ -49,8 +49,10 @@ export default function PaymentSuccessPage() {
               </Button>
             </Link>
             
-            <Button variant="outline" className="w-full gap-2">
-              <Download className="h-4 w-4" />
+            <Button variant="outline" className="w-full gap-2"  onClick={() => {
+    window.open('/api/download-receipt?orderId=ORD-123', '_blank');
+  }}>
+              <Download className="h-4 w-4" aria-label="Télécharger le reçu" />
               Télécharger le reçu
             </Button>
 

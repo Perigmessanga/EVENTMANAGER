@@ -20,7 +20,7 @@ export default function UserTicketsPage() {
       <div className="animate-fade-in">
         <h1 className="font-display font-bold text-3xl mb-1">Mes Billets</h1>
         <p className="text-muted-foreground">
-          Bonjour {user?.firstName}, voici vos billets pour les événements à venir.
+          Bonjour {user?.first_name}, voici vos billets pour les événements à venir.
         </p>
       </div>
 

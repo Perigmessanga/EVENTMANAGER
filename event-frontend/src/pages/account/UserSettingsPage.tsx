@@ -31,7 +31,7 @@ export default function UserSettingsPage() {
       <div className="animate-fade-in">
         <h1 className="font-display font-bold text-3xl mb-1">Paramètres</h1>
         <p className="text-muted-foreground">
-          Personnalisez votre expérience Tikerama.
+          Personnalisez votre expérience Award Dan.
         </p>
       </div>
 

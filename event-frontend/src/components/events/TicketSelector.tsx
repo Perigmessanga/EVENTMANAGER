@@ -1,3 +1,4 @@
+"use client";
 import { useState } from 'react';
 import { Minus, Plus, Info } from 'lucide-react';
 import type { Event, TicketType } from '@/types';
@@ -7,45 +8,70 @@ import { useCartStore } from '@/stores/cartStore';
 import { cn } from '@/lib/utils';
 
 interface TicketSelectorProps {
-  event: Event;
+  event?: Event;
   onContinue?: () => void;
 }
 
 export function TicketSelector({ event, onContinue }: TicketSelectorProps) {
   const { addItem, getItemByTicketType, updateQuantity, removeItem } = useCartStore();
-  
+
+  // ✅ Hooks toujours au tout début du composant
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
-    event.ticketTypes.forEach(ticket => {
+    (event?.ticketTypes || []).forEach(ticket => {
       const cartItem = getItemByTicketType(ticket.id);
       initial[ticket.id] = cartItem?.quantity || 0;
     });
     return initial;
   });
 
+  if (!event || !event.ticketTypes) {
+    return <div>Chargement des billets...</div>;
+  }
+
   const handleQuantityChange = (ticketType: TicketType, delta: number) => {
     const current = localQuantities[ticketType.id] || 0;
-    const newQuantity = Math.max(0, Math.min(current + delta, ticketType.maxPerOrder, ticketType.available));
-    
+    const newQuantity = Math.max(
+      0,
+      Math.min(current + delta, ticketType.max_per_order, ticketType.available)
+    );
+
     setLocalQuantities(prev => ({
       ...prev,
       [ticketType.id]: newQuantity,
     }));
 
-    // Update cart
-    if (newQuantity === 0) {
-      removeItem(ticketType.id);
-    } else if (current === 0 && newQuantity > 0) {
-      addItem(event, ticketType, newQuantity);
-    } else {
-      updateQuantity(ticketType.id, newQuantity);
-    }
+    if (newQuantity === 0) removeItem(ticketType.id);
+    else if (current === 0 && newQuantity > 0) addItem(event, ticketType, newQuantity);
+    else updateQuantity(ticketType.id, newQuantity);
   };
 
   const totalSelected = Object.values(localQuantities).reduce((sum, q) => sum + q, 0);
-  const totalPrice = event.ticketTypes.reduce((sum, ticket) => {
-    return sum + (localQuantities[ticket.id] || 0) * ticket.price;
-  }, 0);
+  const totalPrice = event.ticketTypes.reduce(
+    (sum, ticket) => sum + (localQuantities[ticket.id] || 0) * ticket.price,
+    0
+  );
+
+  // ✅ Fonction de paiement
+  const handlePayment = async () => {
+    const selectedProvider = "AWDPAY";
+    const phoneNumber = "237600000000"; // remplacer par le numéro de l'utilisateur
+    const total = totalPrice;
+
+    // Ici tu peux générer un custom_identifier pour l'utilisateur / la commande
+    const custom_identifier = "CUSTOM123"; 
+    const trx_id = "TRX" + Date.now(); // exemple de trx_id
+
+    // Appel de ton backend pour enregistrer le paiement (exemple)
+    await fetch("/api/mark-paid/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ custom_identifier, trx_id, total, selectedProvider }),
+    });
+
+    // Appel de la fonction de paiement
+    await initiatePayment(selectedProvider, phoneNumber, total, "XAF");
+  };
 
   return (
     <div className="space-y-4">
@@ -65,7 +91,6 @@ export function TicketSelector({ event, onContinue }: TicketSelectorProps) {
         ))}
       </div>
 
-      {/* Summary */}
       {totalSelected > 0 && (
         <div className="bg-muted/50 rounded-xl p-4 space-y-4 animate-fade-in border border-border/50">
           <div className="space-y-2">
@@ -94,7 +119,7 @@ export function TicketSelector({ event, onContinue }: TicketSelectorProps) {
             <Button 
               className="w-full h-12 text-base font-semibold shadow-md hover:shadow-glow transition-all" 
               size="lg" 
-              onClick={onContinue}
+              onClick={() => { onContinue(); handlePayment(); }}
             >
               Continuer vers le paiement
             </Button>
@@ -153,7 +178,7 @@ function TicketTypeCard({ ticket, quantity, onQuantityChange, style }: TicketTyp
           <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{ticket.description}</p>
           <p className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
             <span className="inline-flex items-center gap-1">
-              Max {ticket.maxPerOrder} par commande
+              Max {ticket.max_per_order} par commande
             </span>
             <span>•</span>
             <span>{ticket.available} disponibles</span>
@@ -168,19 +193,13 @@ function TicketTypeCard({ ticket, quantity, onQuantityChange, style }: TicketTyp
               <Button
                 variant="outline"
                 size="icon"
-                className={cn(
-                  'h-9 w-9 rounded-lg transition-all',
-                  quantity === 0 && 'opacity-50'
-                )}
+                className={cn('h-9 w-9 rounded-lg transition-all', quantity === 0 && 'opacity-50')}
                 onClick={() => onQuantityChange(-1)}
                 disabled={quantity === 0}
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className={cn(
-                'w-8 text-center font-bold text-lg transition-colors',
-                isSelected && 'text-primary'
-              )}>
+              <span className={cn('w-8 text-center font-bold text-lg transition-colors', isSelected && 'text-primary')}>
                 {quantity}
               </span>
               <Button
@@ -188,7 +207,7 @@ function TicketTypeCard({ ticket, quantity, onQuantityChange, style }: TicketTyp
                 size="icon"
                 className="h-9 w-9 rounded-lg transition-all"
                 onClick={() => onQuantityChange(1)}
-                disabled={quantity >= ticket.maxPerOrder || quantity >= ticket.available}
+                disabled={quantity >= ticket.max_per_order || quantity >= ticket.available}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -198,4 +217,9 @@ function TicketTypeCard({ ticket, quantity, onQuantityChange, style }: TicketTyp
       </div>
     </div>
   );
+}
+
+// Mock de la fonction initiatePayment
+async function initiatePayment(provider: string, phone: string, amount: number, currency: string) {
+  console.log("Paiement initié :", provider, phone, amount, currency);
 }

@@ -18,12 +18,15 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand & Newsletter */}
           <div className="col-span-2 lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2.5 mb-4 group">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
-                <span className="text-primary-foreground font-display font-bold text-lg">T</span>
-              </div>
-              <span className="font-display font-bold text-xl">Tikerama</span>
-            </Link>
+            
+            <Link to="/" className="flex items-center mb-4">
+  <img
+    src="/logo_AWARD-DAN.png"
+    alt="AWARD DAN"
+    className="h-auto w-60 transition-transform duration-300 hover:scale-105"
+  />
+</Link>
+
             <p className="text-sm text-muted-foreground mb-6 max-w-xs">
               La billetterie en ligne #1 en Côte d'Ivoire. Réservez vos billets en toute sécurité avec Mobile Money.
             </p>
@@ -37,7 +40,7 @@ export function Footer() {
                   placeholder="Votre email" 
                   className="bg-muted/50 border-border/50 h-10"
                 />
-                <Button size="sm" className="h-10 px-4">
+                <Button size="sm" className="h-10 px-4 bg-yellow-500 hover:bg-yellow-600 text-white">
                   S'abonner
                 </Button>
               </div>
@@ -61,7 +64,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link 
                     to={link.href} 
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
+                    className="text-sm text-muted-foreground hover:text-yellow-500 transition-colors link-underline"
                   >
                     {link.label}
                   </Link>
@@ -83,7 +86,7 @@ export function Footer() {
                 <li key={link.label}>
                   <a 
                     href={link.href} 
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors link-underline"
+                    className="text-sm text-muted-foreground hover:text-yellow-500 transition-colors link-underline"
                   >
                     {link.label}
                   </a>
@@ -103,7 +106,7 @@ export function Footer() {
               <li>
                 <a 
                   href="tel:+2250701234567" 
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-yellow-500 transition-colors"
                 >
                   <Phone className="h-4 w-4" />
                   +225 07 01 23 45 67
@@ -111,11 +114,11 @@ export function Footer() {
               </li>
               <li>
                 <a 
-                  href="mailto:contact@tikerama.ci" 
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                  href="mailto:contact@awarddan.ci" 
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-yellow-500 transition-colors"
                 >
                   <Mail className="h-4 w-4" />
-                  contact@tikerama.ci
+                  contact@awarddan.ci
                 </a>
               </li>
             </ul>
@@ -129,16 +132,16 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             {/* Copyright & Legal */}
             <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-muted-foreground">
-              <p>© {new Date().getFullYear()} Tikerama. Tous droits réservés.</p>
+              <p>© {new Date().getFullYear()} Award Dan. Tous droits réservés.</p>
               <div className="flex gap-4">
-                <a href="#" className="hover:text-foreground transition-colors">CGV</a>
-                <a href="#" className="hover:text-foreground transition-colors">Confidentialité</a>
-                <a href="#" className="hover:text-foreground transition-colors">Mentions légales</a>
+                <a href="#" className="hover:text-yellow-500 transition-colors">CGV</a>
+                <a href="#" className="hover:text-yellow-500 transition-colors">Confidentialité</a>
+                <a href="#" className="hover:text-yellow-500 transition-colors">Mentions légales</a>
               </div>
             </div>
 
             {/* Social & Payment */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 flex-wrap">
               {/* Social Links */}
               <div className="flex items-center gap-1">
                 {socialLinks.map((social) => (
@@ -146,7 +149,7 @@ export function Footer() {
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-yellow-500 hover:bg-muted/50 transition-colors"
                   >
                     <social.icon className="h-4 w-4" />
                   </a>
@@ -157,14 +160,8 @@ export function Footer() {
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground hidden sm:inline">Paiement via</span>
                 <div className="flex gap-1.5">
-                  <div className="px-2.5 py-1.5 rounded-md text-xs font-semibold momo-orange shadow-sm">
-                    Orange
-                  </div>
-                  <div className="px-2.5 py-1.5 rounded-md text-xs font-semibold momo-mtn shadow-sm">
-                    MTN
-                  </div>
-                  <div className="px-2.5 py-1.5 rounded-md text-xs font-semibold momo-wave shadow-sm">
-                    Wave
+                  <div className="px-2.5 py-1.5 rounded-md text-xs font-semibold bg-yellow-500 text-white shadow-sm">
+                    AWDPAY
                   </div>
                 </div>
               </div>

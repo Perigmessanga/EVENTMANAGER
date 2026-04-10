@@ -118,234 +118,158 @@ export default function AdminDashboard() {
     );
   }
 
+ // Remplace ton bloc de retour (return) par celui-ci :
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 animate-fade-in">
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        {/* Header - S'adapte de haut en bas sur mobile, et côte à côte sur tablette+ */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 animate-fade-in">
           <div>
-            <h1 className="font-display font-bold text-3xl mb-1">Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="font-display font-bold text-2xl md:text-3xl mb-1">Dashboard</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Bienvenue, {user?.first_name}! Voici un aperçu de vos performances.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex rounded-lg border border-border overflow-hidden">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex rounded-lg border border-border overflow-hidden bg-card">
               {(['7d', '30d', '90d'] as const).map((period) => (
                 <button
                   key={period}
                   onClick={() => setSelectedPeriod(period)}
                   className={cn(
-                    'px-3 py-1.5 text-sm font-medium transition-colors',
+                    'px-3 py-1.5 text-xs md:text-sm font-medium transition-colors',
                     selectedPeriod === period
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-muted-foreground hover:text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {period === '7d' ? '7 jours' : period === '30d' ? '30 jours' : '90 jours'}
+                  {period === '7d' ? '7j' : period === '30d' ? '30j' : '90j'}
                 </button>
               ))}
             </div>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2 text-xs md:text-sm">
               <Download className="h-4 w-4" />
-              Exporter
+              <span className="hidden xs:inline">Exporter</span>
             </Button>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="animate-fade-in stagger-1">
-            <KpiCard
-              title="Revenus totaux"
-              value={formatCurrency(stats.revenue)}
-              trend={{ value: 12.5, label: 'vs mois dernier' }}
-              icon={DollarSign}
-              iconColor="primary"
-            />
-          </div>
-          <div className="animate-fade-in stagger-2">
-            <KpiCard
-              title="Billets vendus"
-              value={stats.ticketsSold.toLocaleString('fr-FR')}
-              trend={{ value: 8.2, label: 'cette semaine' }}
-              icon={Ticket}
-              iconColor="secondary"
-            />
-          </div>
-          <div className="animate-fade-in stagger-3">
-            <KpiCard
-              title="Événements actifs"
-              value={stats.activeEvents}
-              subtitle="publiés"
-              icon={Calendar}
-              iconColor="success"
-            />
-          </div>
-          <div className="animate-fade-in stagger-4">
-            <KpiCard
-              title="Taux de conversion"
-              value={`${stats.conversionRate}%`}
-              trend={{ value: 3.1, label: 'vs semaine dernière' }}
-              icon={TrendingUp}
-              iconColor="info"
-            />
-          </div>
+        {/* KPI Cards - 1 col (mobile), 2 cols (tablette), 4 cols (PC) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <KpiCard
+            title="Revenus totaux"
+            value={formatCurrency(stats.revenue)}
+            trend={{ value: 12.5, label: 'vs mois dernier' }}
+            icon={DollarSign}
+            iconColor="primary"
+          />
+          <KpiCard
+            title="Billets vendus"
+            value={stats.ticketsSold.toLocaleString('fr-FR')}
+            trend={{ value: 8.2, label: 'cette semaine' }}
+            icon={Ticket}
+            iconColor="secondary"
+          />
+          <KpiCard
+            title="Événements actifs"
+            value={stats.activeEvents}
+            subtitle="publiés"
+            icon={Calendar}
+            iconColor="success"
+          />
+          <KpiCard
+            title="Taux de conversion"
+            value={`${stats.conversionRate}%`}
+            trend={{ value: 3.1, label: 'vs semaine dernière' }}
+            icon={TrendingUp}
+            iconColor="info"
+          />
         </div>
 
-        {/* Charts Row */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Revenue Chart */}
+        {/* Charts Row - Empilé sur mobile, 2/3 + 1/3 sur grand écran */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 dashboard-widget animate-fade-in">
-            <div className="dashboard-widget-header">
+            <div className="dashboard-widget-header flex justify-between items-center p-4">
               <div>
                 <CardTitle className="text-lg">Revenus & Ventes</CardTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">Performance des 7 derniers jours</p>
+                <p className="text-sm text-muted-foreground">7 derniers jours</p>
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
             </div>
-            <div className="dashboard-widget-content">
-              <div className="h-[280px] chart-container">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueData}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: 'var(--shadow-lg)',
-                      }}
-                      labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(value: number) => [formatCurrency(value), 'Revenus']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="revenue"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorRevenue)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="p-4 h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} tickFormatter={(v) => `${v/1000}k`} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="url(#colorRevenue)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Category Distribution */}
-          <div className="dashboard-widget animate-fade-in">
-            <div className="dashboard-widget-header">
-              <CardTitle className="text-lg">Par catégorie</CardTitle>
+          <div className="dashboard-widget animate-fade-in p-4">
+            <CardTitle className="text-lg mb-4">Par catégorie</CardTitle>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={categoryData} innerRadius={60} outerRadius={80} dataKey="value">
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="dashboard-widget-content">
-              <div className="h-[180px] mb-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2">
-                {categoryData.map((cat) => (
-                  <div key={cat.name} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <ColorDot color={cat.color} />
-                      <span className="text-muted-foreground">{cat.name}</span>
-                    </div>
-                    <span className="font-medium">{cat.value}%</span>
+            <div className="mt-4 space-y-2">
+              {categoryData.map((cat) => (
+                <div key={cat.name} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <ColorDot color={cat.color} />
+                    <span>{cat.name}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="font-bold">{cat.value}%</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Recent Transactions */}
-          <div className="lg:col-span-2 dashboard-widget animate-fade-in">
-            <div className="dashboard-widget-header">
-              <div>
-                <CardTitle className="text-lg">Transactions récentes</CardTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">Dernières ventes de billets</p>
-              </div>
-              <Button variant="ghost" size="sm" className="gap-1">
-                Voir tout
-                <ArrowUpRight className="h-3 w-3" />
-              </Button>
+        {/* Recent Activity - S'adapte de 1 à 3 colonnes */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 dashboard-widget overflow-hidden">
+            <div className="p-4 flex justify-between items-center border-b">
+              <CardTitle className="text-lg">Transactions</CardTitle>
+              <Button variant="link" size="sm">Voir tout</Button>
             </div>
             <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 text-muted-foreground">
                   <tr>
-                    <th>Événement</th>
-                    <th>Acheteur</th>
-                    <th>Montant</th>
-                    <th>Statut</th>
+                    <th className="p-4 font-medium">Événement</th>
+                    <th className="p-4 font-medium hidden sm:table-cell">Acheteur</th>
+                    <th className="p-4 font-medium">Montant</th>
+                    <th className="p-4 font-medium">Statut</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y">
                   {recentTransactions.map((tx) => (
-                    <tr key={tx.id} className="group">
-                      <td>
-                        <div>
-                          <p className="font-medium text-foreground">{tx.event}</p>
-                          <p className="text-xs text-muted-foreground">{tx.time}</p>
-                        </div>
-                      </td>
-                      <td className="text-muted-foreground">{tx.buyer}</td>
-                      <td className="font-semibold text-foreground">{formatCurrency(tx.amount)}</td>
-                      <td>
-                        <Badge
-                          variant={
-                            tx.status === 'success' ? 'default' :
-                            tx.status === 'pending' ? 'secondary' : 'destructive'
-                          }
-                          className={cn(
-                            'gap-1',
-                            tx.status === 'success' && 'bg-success/10 text-success border-success/20',
-                            tx.status === 'pending' && 'bg-pending/10 text-pending border-pending/20',
-                            tx.status === 'failed' && 'bg-destructive/10 text-destructive border-destructive/20'
-                          )}
-                        >
-                          {tx.status === 'success' && <CheckCircle2 className="h-3 w-3" />}
-                          {tx.status === 'pending' && <Clock className="h-3 w-3" />}
-                          {tx.status === 'failed' && <XCircle className="h-3 w-3" />}
-                          {tx.status === 'success' ? 'Payé' : tx.status === 'pending' ? 'En attente' : 'Échoué'}
-                        </Badge>
+                    <tr key={tx.id}>
+                      <td className="p-4 font-medium">{tx.event}</td>
+                      <td className="p-4 hidden sm:table-cell">{tx.buyer}</td>
+                      <td className="p-4">{formatCurrency(tx.amount)}</td>
+                      <td className="p-4">
+                         <Badge variant="outline" className="text-[10px] sm:text-xs">
+                          {tx.status === 'success' ? 'Payé' : 'Attente'}
+                         </Badge>
                       </td>
                     </tr>
                   ))}
@@ -354,41 +278,17 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Top Events */}
-          <div className="dashboard-widget animate-fade-in">
-            <div className="dashboard-widget-header">
-              <CardTitle className="text-lg">Top événements</CardTitle>
-            </div>
-            <div className="dashboard-widget-content space-y-4">
+          <div className="dashboard-widget p-4">
+            <CardTitle className="text-lg mb-4">Top événements</CardTitle>
+            <div className="space-y-4">
               {mockEvents.slice(0, 4).map((event, index) => (
-                <div 
-                  key={event.id} 
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="relative">
-                    <img 
-                      src={event.imageUrl} 
-                      alt={event.title}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                    <span className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                      {index + 1}
-                    </span>
-                  </div>
+                <div key={event.id} className="flex items-center gap-3">
+                  <img src={event.image_Url} alt={event.title} className="w-10 h-10 rounded object-cover" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">{event.ticketTypes[0].available} dispo</p>
+                    <p className="text-sm font-medium truncate">{event.title}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-sm text-primary">
-                      {formatCurrency(event.ticketTypes[0].price)}
-                    </p>
-                    <MiniChart 
-                      data={sparklineData.slice(0, 7 + index)} 
-                      color="primary" 
-                      height={20}
-                      className="w-14 mt-1"
-                    />
+                  <div className="text-right font-bold text-sm">
+                    {formatCurrency(event.ticketTypes[0].price)}
                   </div>
                 </div>
               ))}

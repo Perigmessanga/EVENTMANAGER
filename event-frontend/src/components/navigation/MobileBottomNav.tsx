@@ -21,6 +21,7 @@ interface NavItem {
 
 const publicNavItems: NavItem[] = [
   { id: 'home', label: 'Accueil', icon: Home, href: '/' },
+ 
   { id: 'events', label: 'Événements', icon: Calendar, href: '/events' },
   { id: 'tickets', label: 'Billets', icon: Ticket, href: '/my-tickets' },
   { id: 'account', label: 'Compte', icon: User, href: '/account/profile' },
@@ -28,6 +29,7 @@ const publicNavItems: NavItem[] = [
 
 const userNavItems: NavItem[] = [
   { id: 'home', label: 'Accueil', icon: Home, href: '/' },
+   { id: 'contacts', label: 'Contacts', icon: Home, href: '/contacts' },
   { id: 'tickets', label: 'Mes Billets', icon: Ticket, href: '/account/tickets' },
   { id: 'events', label: 'Événements', icon: Calendar, href: '/events' },
   { id: 'account', label: 'Compte', icon: User, href: '/account/profile' },

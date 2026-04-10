@@ -1,4 +1,7 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python-envs.pythonProjects": []
+    "CodeGPT.apiKey": "Gemini CLI",
+    "python.analysis.extraPaths": [
+        "./event-backend/apps"
+    ]
 }

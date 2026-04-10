@@ -1,0 +1,56 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+
+build:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA -f docker/dockerfile .
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:latest
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - |
+      if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$SSH_PRIVATE_KEY" ]; then
+        echo "ERROR: VPS_HOST, VPS_USER, or SSH_PRIVATE_KEY is missing. Check your GitLab Settings > CI/CD > Variables (and uncheck Protected)."
+        exit 1
+      fi
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+    - chmod 600 ~/.ssh/deploy_key
+    - ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts
+  script:
+    - |
+      ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST << EOF
+        set -e
+        echo "Login to registry..."
+        echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+
+        echo "Pulling latest image..."
+        docker pull $IMAGE_NAME:latest
+
+        echo "Restarting container..."
+        docker stop event_frontend || true
+        docker rm event_frontend || true
+
+        docker run -d --name event_frontend -p 3000:80 $IMAGE_NAME:latest
+
+        echo "Frontend déployé avec succès!"
+      EOF
+  only:
+    - main

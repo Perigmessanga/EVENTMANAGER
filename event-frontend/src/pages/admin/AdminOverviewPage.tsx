@@ -95,7 +95,7 @@ export default function AdminOverviewPage() {
         <div>
           <h1 className="font-display font-bold text-3xl mb-1">Dashboard</h1>
           <p className="text-muted-foreground">
-            Bienvenue, {user?.firstName}! Voici un aperçu de vos performances.
+            Bienvenue, {user?.first_name}! Voici un aperçu de vos performances.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -341,7 +341,7 @@ export default function AdminOverviewPage() {
               >
                 <div className="relative">
                   <img 
-                    src={event.imageUrl} 
+                    src={event.image_Url} 
                     alt={event.title}
                     className="w-12 h-12 rounded-lg object-cover"
                   />

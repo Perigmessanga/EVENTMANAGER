@@ -32,16 +32,17 @@ export interface TicketType {
   price: number;
   currency: string;
   available: number;
-  maxPerOrder: number;
+  max_per_order: number;
 }
 
 export interface Event {
-  id: string | number;
+  image_url: string;
+  id: number;
   title: string;
   description: string;
   // Legacy / display fields (frontend)
   shortDescription?: string;
-  imageUrl?: string;
+  image_Url?: string;
   date?: string; // ISO string or human date
   time?: string;
   endDate?: string;
@@ -60,6 +61,7 @@ export interface Event {
     id: number | string;
     username?: string;
     email?: string;
+  
   };
   // Ticket types (optional)
   ticketTypes?: TicketType[];
@@ -67,6 +69,7 @@ export interface Event {
   isPublished?: boolean;
   status?: string;
   createdAt?: string;
+  
 }
 
 // Cart Types
@@ -88,6 +91,8 @@ export interface Cart {
 }
 
 // Payment Types
+// Payment API
+
 export type PaymentProvider = 'orange_money' | 'mtn_momo' | 'wave';
 export type PaymentStatus = 'idle' | 'initiating' | 'pending' | 'processing' | 'success' | 'failed';
 
@@ -162,6 +167,7 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
+  results: T[];
   data: T[];
   total: number;
   page: number;
@@ -184,3 +190,16 @@ export interface LoginResponse {
 }
 
 export type RegisterResponse = LoginResponse;
+
+export const PAYMENT_ENDPOINTS = {
+  create: '/payments/initiate/',
+  detail: (id: string) => `/payments/${id}/`,
+  status: (id: string) => `/payments/${id}/status/`,
+  confirm: (id: string) => `/payments/${id}/confirm/`,
+} as const;
+
+export interface EventPublicResponse {
+  event: Event;
+  tickets_available: number;
+  can_book: boolean;
+}

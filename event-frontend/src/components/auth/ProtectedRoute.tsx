@@ -1,5 +1,6 @@
+// ProtectedRoute.tsx
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import type { UserRole } from '@/types';
 
@@ -11,28 +12,17 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isAuthenticated, checkAuth, hasRole } = useAuthStore();
   const [checking, setChecking] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const verify = async () => {
       console.log('[ProtectedRoute] Starting verification...');
-      await checkAuth();
-      
-      const state = useAuthStore.getState();
-      console.log('[ProtectedRoute] After checkAuth - user:', state.user);
-      console.log('[ProtectedRoute] After checkAuth - isAuthenticated:', state.isAuthenticated);
-      console.log('[ProtectedRoute] After checkAuth - requiredRole:', requiredRole);
-      
-      if (state.user && requiredRole) {
-        const hasAccess = state.hasRole(requiredRole);
-        console.log('[ProtectedRoute] Role check:', state.user.role, 'vs', requiredRole, '-> hasAccess:', hasAccess);
-      }
-      
+      await checkAuth(); // Vérifie token + récupère user depuis /auth/me/
       setChecking(false);
     };
     verify();
-  }, [checkAuth, requiredRole]);
+  }, [checkAuth]);
 
+  // Afficher un loader pendant la vérification
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -41,12 +31,13 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Si l'utilisateur n'est pas authentifié → rediriger vers login
   if (!isAuthenticated) {
     console.log('[ProtectedRoute] Not authenticated, redirecting to login');
-    navigate("/login");
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
+  // Vérification du rôle
   if (requiredRole && user && !hasRole(requiredRole)) {
     console.log('[ProtectedRoute] Access denied for role:', user.role);
     return (
@@ -58,7 +49,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
           </p>
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded"
-            onClick={() => navigate("/")}
+            onClick={() => window.location.assign("/")}
           >
             Retour à l'accueil
           </button>
@@ -67,5 +58,6 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     );
   }
 
+  // Accès autorisé → afficher les enfants
   return <>{children}</>;
 };

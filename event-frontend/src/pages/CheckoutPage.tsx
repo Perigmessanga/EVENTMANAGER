@@ -7,15 +7,28 @@ import { Button } from '@/components/ui/button';
 import { useCartStore } from '@/stores/cartStore';
 import { usePaymentStore } from '@/stores/paymentStore';
 import { formatCurrency, formatDateCompact } from '@/lib/format';
+import { post } from '@/lib/api-client';
+
 
 type CheckoutStep = 'cart' | 'payment';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  
   const [step, setStep] = useState<CheckoutStep>('cart');
+  // Ajoute juste après : const [step, setStep] = useState<CheckoutStep>('cart');
+ const [currentOrder, setCurrentOrder] = useState<{ id: string } | null>(null);
+
+  const handleContinueToPayment = async () => {
+    // Crée la commande côté backend avec les tickets sélectionnés
+    const data = await post<{ id: string }>("/orders/", { items });
+    setCurrentOrder(data); // stocke l'ID de commande
+    setStep('payment');
+  };
   
   const { items, total, removeItem, updateQuantity, clearCart } = useCartStore();
   const { resetPayment } = usePaymentStore();
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   const handlePaymentSuccess = () => {
     clearCart();
@@ -144,6 +157,7 @@ export default function CheckoutPage() {
                 <PaymentFlow 
                   onSuccess={handlePaymentSuccess}
                   onBack={() => setStep('cart')}
+                  currentOrder={currentOrder}   // <-- on passe la commande
                 />
               </div>
             )}
@@ -175,14 +189,25 @@ export default function CheckoutPage() {
               </div>
 
               {step === 'cart' && (
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={() => setStep('payment')}
-                >
-                  Passer au paiement
-                </Button>
-              )}
+  <Button
+    className="w-full"
+    size="lg"
+    onClick={async () => {
+      try {
+        // Appel backend pour créer la commande
+        const data = await post<{ id: string }>("/orders/", { items });
+        setCurrentOrder(data); // stocke l'ID de la commande
+
+        setStep('payment'); // passe à l'étape paiement
+      } catch (error) {
+        console.error("Erreur création commande:", error);
+        alert("Impossible de créer la commande, réessayez.");
+      }
+    }}
+  >
+    Passer au paiement
+  </Button>
+)}
 
               <p className="text-xs text-center text-muted-foreground mt-4">
                 🔒 Paiement sécurisé via Mobile Money

@@ -138,7 +138,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                   <Icon className="h-5 w-5" />
                 </Link>
               ) : (
-                <button
+                <Button
                   onClick={() => hasChildren && toggleExpanded(item.id)}
                   className={cn(
                     'flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200',
@@ -148,7 +148,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                </button>
+                </Button>
               )}
             </div>
           </TooltipTrigger>
@@ -271,7 +271,7 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
               <span className="text-primary-foreground font-display font-bold text-sm">T</span>
             </div>
             <span className="font-display font-bold text-lg text-foreground">
-              Tikerama
+              Award Dan
             </span>
           </Link>
         )}
@@ -313,13 +313,13 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
               <TooltipTrigger asChild>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center cursor-pointer">
                   <span className="text-primary-foreground text-sm font-semibold">
-                    {user?.firstName?.charAt(0)?.toUpperCase()}
+                    {user?.first_name?.charAt(0)?.toUpperCase()}
                   </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right">
                 <div>
-                  <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="font-medium">{user?.first_name} {user?.last_name}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
                 </div>
               </TooltipContent>
@@ -330,12 +330,12 @@ export function AdminSidebar({ isCollapsed, onToggle }: AdminSidebarProps) {
             <div className="flex items-center gap-3 px-2 py-2">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center shrink-0">
                 <span className="text-primary-foreground text-sm font-semibold">
-                  {user?.firstName?.charAt(0)?.toUpperCase()}
+                  {user?.first_name?.charAt(0)?.toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">
-                  {user?.firstName} {user?.lastName}
+                  {user?.first_name} {user?.last_name}
                 </p>
                 <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
               </div>

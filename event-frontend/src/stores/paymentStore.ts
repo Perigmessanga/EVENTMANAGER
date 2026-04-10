@@ -1,8 +1,6 @@
 import { create } from 'zustand';
+import { ENDPOINTS } from '@/config/api';
 import type { PaymentStatus, PaymentProvider, PaymentDetails } from '@/types';
-
-// Minimum time between payment attempts (5 minutes)
-const PAYMENT_COOLDOWN = 5 * 60 * 1000;
 
 interface PaymentState {
   status: PaymentStatus;
@@ -10,190 +8,106 @@ interface PaymentState {
   error: string | null;
   transactionId: string | null;
   reference: string | null;
-  lastAttemptTime: number | null;
-  pollingInterval: number | null;
 }
 
 interface PaymentActions {
-  initiatePayment: (provider: PaymentProvider, phoneNumber: string, amount: number) => Promise<void>;
+  initiatePayment: (provider: PaymentProvider, phoneNumber: string, amount: number, orderId: number) => Promise<void>;
   checkPaymentStatus: () => Promise<PaymentStatus>;
-  confirmPayment: () => Promise<void>;
-  cancelPayment: () => void;
   resetPayment: () => void;
-  canRetryPayment: () => boolean;
-  getTimeUntilRetry: () => number;
-  setStatus: (status: PaymentStatus) => void;
-  setError: (error: string | null) => void;
 }
 
 type PaymentStore = PaymentState & PaymentActions;
 
-// Generate unique reference for idempotency
-const generateReference = (): string => {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `TKR-${timestamp}-${random}`.toUpperCase();
-};
-
 export const usePaymentStore = create<PaymentStore>((set, get) => ({
-  // State
   status: 'idle',
   details: null,
   error: null,
   transactionId: null,
   reference: null,
-  lastAttemptTime: null,
-  pollingInterval: null,
 
-  // Actions
-  initiatePayment: async (provider: PaymentProvider, phoneNumber: string, amount: number) => {
-    const { canRetryPayment, lastAttemptTime } = get();
-    
-    // Prevent duplicate payments
-    if (!canRetryPayment() && lastAttemptTime) {
-      const remaining = Math.ceil((PAYMENT_COOLDOWN - (Date.now() - lastAttemptTime)) / 1000);
-      set({
-        error: `Veuillez patienter ${remaining}s avant de réessayer.`,
-      });
-      return;
-    }
-
-    const reference = generateReference();
-    
-    set({
-      status: 'initiating',
-      error: null,
-      reference,
-      lastAttemptTime: Date.now(),
-      details: {
-        provider,
-        phoneNumber,
-        amount,
-        currency: 'XOF',
-        reference,
-      },
-    });
+  initiatePayment: async (provider, phoneNumber, amount, orderId) => {
+    set({ status: 'initiating', error: null });
 
     try {
-      // Simulate API call to initiate payment
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In production, this would call the Mobile Money API
-      const transactionId = `TXN-${Date.now()}`;
-      
+      const token = localStorage.getItem('access_token');
+      const body = {
+        order: orderId,
+        amount,
+        payment_method: provider,
+        phone_number: phoneNumber,
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}${ENDPOINTS.payments.initiate}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error('Impossible d’initier le paiement');
+
+      const data = await response.json();
+
       set({
         status: 'pending',
-        transactionId,
+        transactionId: String(data.transaction_id),
+        reference: String(data.id),
         details: {
           provider,
           phoneNumber,
           amount,
           currency: 'XOF',
-          reference,
-          transactionId,
+          reference: String(data.id),
+          transactionId: String(data.transaction_id),
         },
       });
-      
-      // Start polling for status (in a real app)
-      // This simulates the user confirming on their phone
-    } catch (error) {
-      set({
-        status: 'failed',
-        error: 'Échec de l\'initiation du paiement. Veuillez réessayer.',
-      });
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: 'failed', error: message });
     }
   },
 
   checkPaymentStatus: async () => {
-    const { transactionId, status } = get();
-    
-    if (!transactionId || status === 'success' || status === 'failed') {
-      return status;
-    }
+    const { reference } = get();
+    if (!reference) return 'failed';
 
     set({ status: 'processing' });
 
     try {
-      // Simulate status check
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // For demo: randomly succeed or stay pending
-      const random = Math.random();
-      let newStatus: PaymentStatus;
-      
-      if (random > 0.5) {
-        newStatus = 'success';
-      } else if (random > 0.1) {
-        newStatus = 'pending';
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}${ENDPOINTS.payments.status}${reference}/`,
+        {
+          headers: {
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error('Erreur lors de la vérification du paiement');
+
+      const data = await response.json();
+
+      if (data.status === 'completed') {
+        set({ status: 'success' });
+        return 'success';
+      } else if (data.status === 'failed') {
+        set({ status: 'failed', error: 'Le paiement a échoué' });
+        return 'failed';
       } else {
-        newStatus = 'failed';
-        set({ error: 'Le paiement a été refusé.' });
+        set({ status: 'pending' });
+        return 'pending';
       }
-      
-      set({ status: newStatus });
-      return newStatus;
-    } catch {
-      set({
-        status: 'failed',
-        error: 'Erreur de vérification du paiement.',
-      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: 'failed', error: message });
       return 'failed';
     }
   },
 
-  confirmPayment: async () => {
-    set({ status: 'processing' });
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      set({ status: 'success' });
-    } catch {
-      set({
-        status: 'failed',
-        error: 'Échec de la confirmation du paiement.',
-      });
-    }
-  },
-
-  cancelPayment: () => {
-    set({
-      status: 'idle',
-      error: null,
-      transactionId: null,
-      reference: null,
-      details: null,
-    });
-  },
-
-  resetPayment: () => {
-    set({
-      status: 'idle',
-      details: null,
-      error: null,
-      transactionId: null,
-      reference: null,
-      lastAttemptTime: null,
-      pollingInterval: null,
-    });
-  },
-
-  canRetryPayment: () => {
-    const { lastAttemptTime, status } = get();
-    
-    if (status === 'success') return false;
-    if (!lastAttemptTime) return true;
-    
-    return Date.now() - lastAttemptTime >= PAYMENT_COOLDOWN;
-  },
-
-  getTimeUntilRetry: () => {
-    const { lastAttemptTime } = get();
-    if (!lastAttemptTime) return 0;
-    
-    const elapsed = Date.now() - lastAttemptTime;
-    return Math.max(0, PAYMENT_COOLDOWN - elapsed);
-  },
-
-  setStatus: (status: PaymentStatus) => set({ status }),
-  setError: (error: string | null) => set({ error }),
+  resetPayment: () =>
+    set({ status: 'idle', error: null, details: null, transactionId: null, reference: null }),
 }));

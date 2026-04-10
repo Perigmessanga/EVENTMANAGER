@@ -8,6 +8,9 @@ import {
   Clock,
   MapPin,
   Save,
+  Eye,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +48,10 @@ export default function CreateEventPage() {
     status: 'draft',
   });
 
+  const [ticketTypes, setTicketTypes] = useState<any[]>([
+    { name: 'Standard', price: '', quantity_total: '100', description: 'Entrée standard' }
+  ]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -62,27 +69,63 @@ export default function CreateEventPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleTicketTypeChange = (index: number, field: string, value: string) => {
+    const updated = [...ticketTypes];
+    updated[index] = { ...updated[index], [field]: value };
+    setTicketTypes(updated);
+  };
+
+  const addTicketType = () => {
+    setTicketTypes([...ticketTypes, { name: '', price: '', quantity_total: '100', description: '' }]);
+  };
+
+  const removeTicketType = (index: number) => {
+    if (ticketTypes.length > 1) {
+      setTicketTypes(ticketTypes.filter((_, i) => i !== index));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`).toISOString();
-    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`).toISOString();
+    try {
+      const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`).toISOString();
+      const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`).toISOString();
 
-    const eventData = {
-      title: formData.title,
-      description: formData.description,
-      location: formData.location,
-      start_date: startDateTime,
-      end_date: endDateTime,
-      capacity: parseInt(formData.capacity),
-      ticket_price: parseFloat(formData.ticket_price),
-      status: formData.status as 'draft' | 'published' | 'cancelled' | 'completed',
-      ...(imageFile && { image: imageFile }),
-    };
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        start_date: startDateTime,
+        end_date: endDateTime,
+        capacity: parseInt(formData.capacity),
+        ticket_price: parseFloat(formData.ticket_price) || 0,
+        status: formData.status as 'draft' | 'published' | 'cancelled' | 'completed',
+        ticketTypes: ticketTypes.map(t => ({
+          name: t.name,
+          price: parseFloat(t.price) || 0,
+          quantity_total: parseInt(t.quantity_total) || 0,
+          description: t.description
+        })),
+        ...(imageFile && { image: imageFile }),
+      };
 
-    const result = await create(eventData);
-    if (result) {
-      navigate('/admin/events');
+      console.log('[DEBUG] eventData à envoyer:', eventData);
+
+      const result = await create(eventData);
+
+      console.log('[DEBUG] Résultat création événement:', result);
+
+      if (result) {
+        navigate('/admin/events');
+      }
+    } catch (error) {
+      console.error('[ERROR] Échec création événement:', error);
+      toast({
+        title: 'Erreur création événement',
+        description: error instanceof Error ? error.message : 'Erreur inconnue',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -274,7 +317,7 @@ export default function CreateEventPage() {
           className="dashboard-widget"
         >
           <div className="dashboard-widget-header">
-            <CardTitle>Capacité & Tarification</CardTitle>
+            <CardTitle>Capacité & Tarification Générale</CardTitle>
           </div>
           <div className="dashboard-widget-content">
             <div className="grid md:grid-cols-2 gap-6">
@@ -294,7 +337,7 @@ export default function CreateEventPage() {
               </div>
 
               <div>
-                <Label htmlFor="ticket_price">Prix du billet (FCFA) *</Label>
+                <Label htmlFor="ticket_price">Prix du billet par défaut (FCFA) *</Label>
                 <Input 
                   id="ticket_price" 
                   name="ticket_price"
@@ -308,6 +351,88 @@ export default function CreateEventPage() {
                 />
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Ticket Types Management */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="dashboard-widget"
+        >
+          <div className="dashboard-widget-header flex items-center justify-between">
+            <CardTitle>Types de Billets (Détails)</CardTitle>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={addTicketType}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter un type
+            </Button>
+          </div>
+          <div className="dashboard-widget-content space-y-6">
+            {ticketTypes.map((ticket, index) => (
+              <div key={index} className="p-4 border border-border rounded-xl bg-muted/30 relative animate-in fade-in slide-in-from-top-2">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <Label>Nom du ticket *</Label>
+                    <Input 
+                      placeholder="Ex: VIP, Early Bird"
+                      value={ticket.name}
+                      onChange={(e) => handleTicketTypeChange(index, 'name', e.target.value)}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Prix (FCFA) *</Label>
+                    <Input 
+                      type="number"
+                      placeholder="0"
+                      value={ticket.price}
+                      onChange={(e) => handleTicketTypeChange(index, 'price', e.target.value)}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Quantité *</Label>
+                    <Input 
+                      type="number"
+                      placeholder="100"
+                      value={ticket.quantity_total}
+                      onChange={(e) => handleTicketTypeChange(index, 'quantity_total', e.target.value)}
+                      className="mt-2"
+                      required
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <Label>Description</Label>
+                    <Input 
+                      placeholder="Courte description des avantages"
+                      value={ticket.description}
+                      onChange={(e) => handleTicketTypeChange(index, 'description', e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+                {ticketTypes.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeTicketType(index)}
+                    className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
         </motion.div>
 

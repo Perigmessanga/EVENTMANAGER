@@ -1,8 +1,9 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { post, get } from '@/lib/api-client';
-import { ENDPOINTS } from '@/config/api';
-import type { User, UserRole, LoginResponse, RegisterResponse } from '@/types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { post, get } from "@/lib/api-client";
+import { ENDPOINTS } from "@/config/api";
+import type { User, UserRole, LoginResponse, RegisterResponse } from "@/types";
 
 interface AuthState {
   user: User | null;
@@ -11,27 +12,25 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  otpStep: boolean; // true si en attente de validation OTP
 }
 
 interface RegisterData {
   email: string;
-  phone?: string;
+  password: string;
+  password_confirm?: string;
   firstName?: string;
   lastName?: string;
   username?: string;
-  password: string;
-  password_confirm?: string;
+  phone?: string;
 }
 
 type AuthStore = AuthState & {
-  login: (email: string, password: string) => Promise<void>;
-  loginWithPhone: (phone: string, otp_code: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  requestPhoneOtp: (phone: string) => Promise<void>;
+  requestEmailOtp: (email: string) => Promise<void>;
+  verifyEmailOtp: (email: string, otp_code: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: User) => void;
-  setTokens: (accessToken: string, refreshToken: string) => void;
-  setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   checkAuth: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
@@ -46,72 +45,84 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      otpStep: false, // au départ pas d'OTP
 
-      login: async (email, password) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await post<LoginResponse>(ENDPOINTS.auth.login, { email, password });
-          set({
-            user: response.user,
-            accessToken: response.access,
-            refreshToken: response.refresh,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          localStorage.setItem('access_token', response.access);
-          localStorage.setItem('refresh_token', response.refresh);
-          localStorage.setItem('user', JSON.stringify(response.user));
-        } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Échec de connexion.', isLoading: false });
-          throw error;
-        }
-      },
-
-      loginWithPhone: async (phone, otp_code) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await post<LoginResponse>(ENDPOINTS.auth.loginPhoneOtp, { phone, otp_code });
-          set({
-            user: response.user,
-            accessToken: response.access,
-            refreshToken: response.refresh,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          localStorage.setItem('access_token', response.access);
-          localStorage.setItem('refresh_token', response.refresh);
-          localStorage.setItem('user', JSON.stringify(response.user));
-        } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Code OTP invalide.', isLoading: false });
-          throw error;
-        }
-      },
-
-      requestPhoneOtp: async (phone) => {
-        set({ isLoading: true, error: null });
-        try {
-          await post(ENDPOINTS.auth.requestPhoneOtp, { phone });
-          set({ isLoading: false });
-        } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'Impossible de demander l\'OTP.', isLoading: false });
-          throw error;
-        }
-      },
-
-      register: async (data) => {
+      /**
+       * INSCRIPTION
+       */
+      register: async (data: RegisterData) => {
         set({ isLoading: true, error: null });
         try {
           const payload = {
             email: data.email,
-            username: data.username || data.email.split('@')[0],
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            phone: data.phone || '',
+            username: data.username || data.email.split("@")[0],
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
             password: data.password,
             password_confirm: data.password_confirm || data.password,
           };
 
-          const response = await post<RegisterResponse>(ENDPOINTS.auth.register, payload);
+          await post<RegisterResponse>(ENDPOINTS.auth.register, payload);
+
+          // Après inscription, passer à l'étape OTP
+          set({ otpStep: true, isLoading: false });
+        } catch (err: any) {
+          const errorMsg = err instanceof Error ? err.message : "Erreur lors de l'inscription";
+          set({ error: errorMsg, isLoading: false });
+          throw err;
+        }
+      },
+
+      /**
+       * ENVOI OTP PAR EMAIL
+       */
+      requestEmailOtp: async (email: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await post(ENDPOINTS.auth.requestEmailOtp, { email });
+          set({ isLoading: false });
+        } catch (err: any) {
+          const errorMsg = err instanceof Error ? err.message : "Impossible d'envoyer l'OTP par email";
+          set({ error: errorMsg, isLoading: false });
+          throw err;
+        }
+      },
+
+      /**
+       * VERIFICATION OTP
+       */
+      verifyEmailOtp: async (email: string, otp_code: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await post<LoginResponse>(ENDPOINTS.auth.verifyEmailOtp, { email, otp_code });
+
+          set({
+            user: response.user,
+            accessToken: response.access,
+            refreshToken: response.refresh,
+            isAuthenticated: true,
+            otpStep: false,
+            isLoading: false,
+          });
+
+          // Stocker tokens et user
+          localStorage.setItem("access_token", response.access);
+          localStorage.setItem("refresh_token", response.refresh);
+          localStorage.setItem("user", JSON.stringify(response.user));
+        } catch (err: any) {
+          const errorMsg = err instanceof Error ? err.message : "OTP invalide ou expiré";
+          set({ error: errorMsg, isLoading: false });
+          throw err;
+        }
+      },
+
+      /**
+       * LOGIN classique après activation du compte
+       */
+      login: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await post<LoginResponse>(ENDPOINTS.auth.login, { email, password });
 
           set({
             user: response.user,
@@ -119,39 +130,42 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: response.refresh,
             isAuthenticated: true,
             isLoading: false,
+            otpStep: false,
           });
 
-          localStorage.setItem('access_token', response.access);
-          localStorage.setItem('refresh_token', response.refresh);
-          localStorage.setItem('user', JSON.stringify(response.user));
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : 'Erreur lors de l\'inscription';
+          localStorage.setItem("access_token", response.access);
+          localStorage.setItem("refresh_token", response.refresh);
+          localStorage.setItem("user", JSON.stringify(response.user));
+        } catch (err: any) {
+          const errorMsg = err instanceof Error ? err.message : "Échec de connexion";
           set({ error: errorMsg, isLoading: false });
-          throw error;
+          throw err;
         }
       },
 
+      /**
+       * LOGOUT
+       */
       logout: () => {
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false, error: null });
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+          otpStep: false,
+          error: null,
+        });
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
       },
 
-      setUser: (user) => set({ user }),
-      setTokens: (accessToken, refreshToken) => {
-        set({ accessToken, refreshToken });
-        localStorage.setItem('access_token', accessToken);
-        localStorage.setItem('refresh_token', refreshToken);
-      },
-      setLoading: (isLoading) => set({ isLoading }),
       setError: (error) => set({ error }),
 
       checkAuth: async () => {
-        const state = getState();
-        const accessToken = state.accessToken || localStorage.getItem('access_token');
+        const accessToken = localStorage.getItem("access_token");
         if (!accessToken) {
-          set({ isAuthenticated: false });
+          set({ isAuthenticated: false, user: null });
           return;
         }
         try {
@@ -159,9 +173,9 @@ export const useAuthStore = create<AuthStore>()(
           set({ user, accessToken, isAuthenticated: true });
         } catch {
           set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("user");
         }
       },
 
@@ -173,7 +187,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'tikerama-auth',
+      name: "tikerama-auth",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,

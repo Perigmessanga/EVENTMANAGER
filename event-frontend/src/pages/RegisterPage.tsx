@@ -1,3 +1,4 @@
+// src/pages/RegisterPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
@@ -6,130 +7,191 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner-toast";
 
 const RegisterPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const { register, user, isAuthenticated, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
+  const {
+    register,
+    requestEmailOtp,
+    verifyEmailOtp,
+    isAuthenticated,
+    user,
+    isLoading,
+    error,
+  } = useAuthStore();
 
-  // Redirection automatique si déjà connecté
+  const [step, setStep] = useState<"register" | "otp" | "done">("register");
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    passwordConfirm: "",
+    firstName: "",
+    lastName: "",
+  });
+
+  const [otpCode, setOtpCode] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Redirection si déjà connecté
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (["admin", "organizer"].includes(user.role)) {
-        navigate("/admin");
-      } else {
-        navigate("/my-tickets");
-      }
+      navigate(
+        user.role === "admin" || user.role === "organizer" ? "/admin" : "/my-tickets"
+      );
     }
   }, [isAuthenticated, user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Gestion des champs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Soumission inscription
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== passwordConfirm) {
+    if (formData.password !== formData.passwordConfirm) {
       toast.error("Les mots de passe ne correspondent pas !");
       return;
     }
 
     try {
       await register({
-        email,
-        password,
-        password_confirm: passwordConfirm,
-        firstName,
-        lastName,
+        email: formData.email,
+        password: formData.password,
+        password_confirm: formData.passwordConfirm,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
       });
-      toast.success("Inscription réussie !");
-      // Redirection gérée automatiquement par useEffect
-    } catch (err) {
-      console.error(err);
-      toast.error("Échec de l'inscription. Vérifiez vos informations.");
+
+      // Envoyer OTP après inscription
+      await requestEmailOtp(formData.email);
+      toast.success("Code OTP envoyé par email !");
+      setStep("otp");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.message || "Échec de l'inscription. Vérifiez vos informations.");
+    }
+  };
+
+  // Soumission OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await verifyEmailOtp(formData.email, otpCode);
+      toast.success("Email vérifié, compte activé !");
+      setStep("done");
+      navigate("/login");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.message || "OTP invalide ou expiré.");
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="bg-card p-8 rounded-xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Inscription</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          {step === "register" ? "Inscription" : "Vérification OTP"}
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium mb-1">
-              Prénom
-            </label>
+        {/* ------------------- Étape Inscription ------------------- */}
+        {step === "register" && (
+          <form onSubmit={handleRegister} className="space-y-4">
             <Input
-              id="firstName"
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Prénom"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
             />
-          </div>
-
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium mb-1">
-              Nom
-            </label>
             <Input
-              id="lastName"
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Nom"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
             />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email
-            </label>
             <Input
-              id="email"
+              placeholder="Email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleChange}
               required
+              autoComplete="email"
             />
-          </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Mot de passe
-            </label>
+            {/* Password */}
+            <div className="relative">
+              <Input
+                placeholder="Mot de passe"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Masquer" : "Afficher"}
+              </button>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="relative">
+              <Input
+                placeholder="Confirmer le mot de passe"
+                name="passwordConfirm"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.passwordConfirm}
+                onChange={handleChange}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? "Masquer" : "Afficher"}
+              </button>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Inscription..." : "S'inscrire"}
+            </Button>
+          </form>
+        )}
+
+        {/* ------------------- Étape OTP ------------------- */}
+        {step === "otp" && (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
             <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Entrez le code OTP"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
               required
             />
-          </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Vérification..." : "Vérifier OTP"}
+            </Button>
+          </form>
+        )}
 
-          <div>
-            <label htmlFor="passwordConfirm" className="block text-sm font-medium mb-1">
-              Confirmer le mot de passe
-            </label>
-            <Input
-              id="passwordConfirm"
-              type="password"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-            {isLoading ? "Inscription..." : "S'inscrire"}
-          </Button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Déjà un compte ?{" "}
-          <Link to="/login" className="text-blue-500 hover:underline">
-            Connectez-vous
-          </Link>
-        </p>
+        {/* ------------------- Lien vers login ------------------- */}
+        {step === "register" && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Déjà un compte ?{" "}
+            <Link to="/login" className="text-blue-500 hover:underline">
+              Connectez-vous
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

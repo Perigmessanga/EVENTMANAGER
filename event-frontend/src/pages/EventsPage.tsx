@@ -17,25 +17,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { get } from '@/lib/api-client';
 import { ENDPOINTS } from '@/config/api';
 import { cn } from '@/lib/utils';
+import { PaginatedResponse } from '@/types';
+import { Event } from "@/types";
 
-export interface Event {
-  id: number;
-  title: string;
-  description: string;
-  image: string | null;
-  location: string;
-  start_date: string;
-  end_date: string;
-  capacity: number;
-  ticket_price: string | number;
-  status: string;
-  organizer: {
-    id: number;
-    username: string;
-    email: string;
-  };
-  created_at: string;
-}
+
 
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,23 +34,45 @@ export default function EventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await get<Event[]>(ENDPOINTS.events.list);
-        setEvents(Array.isArray(response) ? response : []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load events');
-        setEvents([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+ useEffect(() => {
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    setError(null);
 
-    fetchEvents();
-  }, []);
+    try {
+      const params = new URLSearchParams();
+
+      if (searchQuery) params.set("search", searchQuery);
+      if (locationFilter) params.set("location", locationFilter);
+
+      const url = `${ENDPOINTS.events.list}${
+        params.toString() ? "?" + params.toString() : ""
+      }`;
+
+      const response = await get<Event[] | PaginatedResponse<Event>>(url);
+
+      // 🔹 type guard
+      function isPaginatedResponse(
+        data: Event[] | PaginatedResponse<Event>
+      ): data is PaginatedResponse<Event> {
+        return (data as PaginatedResponse<Event>).results !== undefined;
+      }
+
+      const eventsData: Event[] = isPaginatedResponse(response)
+        ? response.results
+        : response;
+
+      setEvents(eventsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load events");
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchEvents();
+}, [searchQuery, locationFilter]);
 
   const filteredEvents = useMemo(() => {
     let filtered = events;

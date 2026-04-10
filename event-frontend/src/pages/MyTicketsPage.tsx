@@ -41,7 +41,7 @@ export default function MyTicketsPage() {
         <div className="mb-8">
           <h1 className="font-display font-bold text-3xl mb-2">Mes Billets</h1>
           <p className="text-muted-foreground">
-            Bonjour {user?.firstName}, voici vos billets
+            Bonjour {user?.first_name}, voici vos billets
           </p>
         </div>
 

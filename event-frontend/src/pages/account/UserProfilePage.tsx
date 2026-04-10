@@ -47,21 +47,19 @@ export default function UserProfilePage() {
               <div className="relative">
                 <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center">
                   <span className="text-primary-foreground text-3xl font-bold">
-                    {user?.firstName?.charAt(0)?.toUpperCase()}
+                    {user?.first_name?.charAt(0)?.toUpperCase()}
                   </span>
                 </div>
-                <button 
-                  type="button"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                >
+                <button type="button" aria-label="Changer la photo de profil" title="Changer la photo de profil" className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors">
+
                   <Camera className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
               <div>
-                <h2 className="font-semibold text-lg">{user?.firstName} {user?.lastName}</h2>
+                <h2 className="font-semibold text-lg">{user?.first_name} {user?.last_name}</h2>
                 <p className="text-muted-foreground">{user?.email}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Membre depuis {new Date(user?.createdAt || '').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                  Membre depuis {new Date(user?.created_at || '').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                 </p>
               </div>
             </div>
@@ -81,7 +79,7 @@ export default function UserProfilePage() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="firstName" 
-                    defaultValue={user?.firstName}
+                    defaultValue={user?.first_name}
                     className="pl-9"
                   />
                 </div>
@@ -92,7 +90,7 @@ export default function UserProfilePage() {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="lastName" 
-                    defaultValue={user?.lastName}
+                    defaultValue={user?.last_name}
                     className="pl-9"
                   />
                 </div>

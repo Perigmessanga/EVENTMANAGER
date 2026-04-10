@@ -46,15 +46,16 @@ python manage.py runserver
 
 ### 4. Accéder à l'API
 
-- **API Documentation Swagger**: http://localhost:8000/api/docs/
-- **API Documentation ReDoc**: http://localhost:8000/api/redoc/
-- **Admin Django**: http://localhost:8000/admin/
+- **API Documentation Swagger**: <http://localhost:8000/api/docs/>
+- **API Documentation ReDoc**: <http://localhost:8000/api/redoc/>
+- **Admin Django**: <http://localhost:8000/admin/>
 
 ---
 
 ## 🔗 Endpoints d'Authentification disponibles
 
 ### 1. Inscription
+
 ```
 POST /api/v1/auth/register/
 Content-Type: application/json
@@ -79,6 +80,7 @@ Response:
 ```
 
 ### 2. Connexion (Email + Mot de passe)
+
 ```
 POST /api/v1/auth/login/
 Content-Type: application/json
@@ -98,6 +100,7 @@ Response:
 ```
 
 ### 3. Demander un OTP par SMS
+
 ```
 POST /api/v1/auth/request_phone_otp/
 Content-Type: application/json
@@ -114,6 +117,7 @@ Response:
 ```
 
 ### 4. Connexion par OTP (Téléphone)
+
 ```
 POST /api/v1/auth/login_phone_otp/
 Content-Type: application/json
@@ -133,6 +137,7 @@ Response:
 ```
 
 ### 5. Renouveler le token d'accès
+
 ```
 POST /api/v1/auth/refresh_token/
 Content-Type: application/json
@@ -148,6 +153,7 @@ Response:
 ```
 
 ### 6. Récupérer le profil actuel
+
 ```
 GET /api/v1/auth/me/
 Authorization: Bearer {access_token}
@@ -168,6 +174,7 @@ Response:
 ```
 
 ### 7. Changer le mot de passe
+
 ```
 POST /api/v1/auth/change_password/
 Authorization: Bearer {access_token}
@@ -295,7 +302,7 @@ DEBUG=True
 SECRET_KEY=votre-cle-secrete
 DB_ENGINE=sqlite3
 ALLOWED_HOSTS=localhost,127.0.0.1
-CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:4173/
 ```
 
 ### Structure des données User
@@ -321,16 +328,16 @@ interface User {
 
 ## 📝 Notes importantes
 
-1. **Tokens JWT**: 
+1. **Tokens JWT**:
    - `access_token`: Durée de vie 1 heure
    - `refresh_token`: Durée de vie 7 jours
    - Stockés automatiquement dans `localStorage`
 
-2. **CORS**: 
+2. **CORS**:
    - Configuré pour accepter les requêtes du frontend
    - Assurez-vous que `CORS_ALLOWED_ORIGINS` inclut votre URL frontend
 
-3. **OTP en développement**: 
+3. **OTP en développement**:
    - L'OTP est retourné dans la réponse API
    - À remplacer par un vrai provider SMS en production
 
@@ -344,15 +351,18 @@ interface User {
 ## 🆘 Dépannage
 
 ### Erreur: "No such table: authentication_customuser"
+
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
 ### Erreur CORS
+
 Vérifiez que `CORS_ALLOWED_ORIGINS` dans `.env.dev` inclut votre URL frontend.
 
 ### Erreur: "Invalid token"
+
 Le token a expiré. Utilisez le `refresh_token` pour obtenir un nouveau `access_token`.
 
 ---

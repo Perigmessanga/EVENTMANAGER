@@ -20,19 +20,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/loading-skeleton';
 
-import { formatDate, formatCurrency, getRelativeTime } from '@/lib/format';
+import { formatDate, formatCurrency, getRelativeTime, formatLocalTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Event } from "@/types";
-import { useCartStore } from '@/stores/cartStore'; // <-- IMPORT CORRECT
-import { getEventPublicDetail } from '@/data/api/events'; // <-- import Axios API
+import { useCartStore } from '@/stores/cartStore'; 
+import { getEventPublicDetail } from '@/data/api/events'; 
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-
-
 
   const [event, setEvent] = useState<Event | null>(null);
   const { addItem, getItemByTicketType } = useCartStore();
@@ -44,7 +42,6 @@ export default function EventDetailPage() {
 
     getEventPublicDetail(id)
       .then((data) => setEvent(data))
-
       .catch((err) => {
         console.error(err);
         setEvent(null);
@@ -104,23 +101,18 @@ export default function EventDetailPage() {
       </Layout>
     );
   }
-  if (!event) return <div>Chargement...</div>;
-  console.log("TICKETS FRONT:", event.ticketTypes);
+
   const lowestPrice =
     event.ticketTypes && event.ticketTypes.length > 0
       ? Math.min(...event.ticketTypes.map(t => Number(t.price)))
       : 0;
 
   const totalAvailable =
-    event.ticketTypes?.reduce((sum, t) => sum + t.available, 0) || 0;
+    event.ticketTypes?.reduce((sum, t) => sum + (Number(t.available) || 0), 0) || 0;
+
   const relativeTime = getRelativeTime(event.date);
+  const localTime = formatLocalTime(event.date);
 
-  // Extraire l'heure locale depuis start_date (ISO string)
-  const localTime = event.date
-    ? new Date(event.date).toLocaleTimeString('fr-CI', { hour: '2-digit', minute: '2-digit' })
-    : '--:--';
-
-  // --- HANDLE CONTINUE ---
   const handleContinue = () => {
     event.ticketTypes.forEach(ticket => {
       const quantity = getItemByTicketType(ticket.id)?.quantity || 0;
@@ -252,9 +244,9 @@ export default function EventDetailPage() {
                     <MapPin className="h-5 w-5 text-success" />
                   </div>
                   <div>
-                    <p className="font-semibold">{event.venue}</p>
+                    <p className="font-semibold">{event.location || "Lieu non défini"}</p>
                     <p className="text-sm text-muted-foreground">
-                      {event.address}, {event.city}
+                      Consultez la description pour plus de précisions
                     </p>
                   </div>
                 </div>

@@ -88,9 +88,23 @@ export default function CreateEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isLoading) return;
+
     try {
+      // Validation basique
+      if (!formData.start_date || !formData.start_time) {
+        toast({
+          title: 'Données manquantes',
+          description: "La date et l'heure de début sont obligatoires.",
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`).toISOString();
-      const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`).toISOString();
+      const endDateTime = formData.end_date && formData.end_time 
+        ? new Date(`${formData.end_date}T${formData.end_time}`).toISOString()
+        : startDateTime;
 
       const eventData = {
         title: formData.title,
@@ -98,32 +112,31 @@ export default function CreateEventPage() {
         location: formData.location,
         start_date: startDateTime,
         end_date: endDateTime,
-        capacity: parseInt(formData.capacity),
+        capacity: parseInt(formData.capacity) || 0,
         ticket_price: parseFloat(formData.ticket_price) || 0,
         status: formData.status as 'draft' | 'published' | 'cancelled' | 'completed',
         ticketTypes: ticketTypes.map(t => ({
-          name: t.name,
+          name: t.name || 'Billet',
           price: parseFloat(t.price) || 0,
           quantity_total: parseInt(t.quantity_total) || 0,
-          description: t.description
+          description: t.description || ''
         })),
         ...(imageFile && { image: imageFile }),
       };
 
-      console.log('[DEBUG] eventData à envoyer:', eventData);
-
       const result = await create(eventData);
 
-      console.log('[DEBUG] Résultat création événement:', result);
-
       if (result) {
-        navigate('/admin/events');
+        // Petit délai pour laisser le toast apparaître avant navigation
+        setTimeout(() => {
+          navigate('/admin/events');
+        }, 500);
       }
     } catch (error) {
       console.error('[ERROR] Échec création événement:', error);
       toast({
-        title: 'Erreur création événement',
-        description: error instanceof Error ? error.message : 'Erreur inconnue',
+        title: 'Erreur système',
+        description: "Une erreur inattendue est survenue lors de la création.",
         variant: 'destructive',
       });
     }

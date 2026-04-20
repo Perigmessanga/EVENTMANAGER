@@ -31,13 +31,31 @@ export const useEventAPI = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const normalizeEvents = (events: any[]): Event[] =>
-    events.map(e => ({
-      ...e,
-      date: typeof e.date === 'number' ? new Date(e.date).toISOString() : e.date || '',
-      isFeatured: !!e.isFeatured,
-      isPublished: !!e.isPublished,
-    }));
+  const normalizeEvents = (events: any[]): Event[] => {
+    console.log("🔍 Normalisation des événements :", events.length, "reçus");
+    return events.map(e => {
+      // Normalisation des tickets (le backend envoie souvent ticket_types)
+      const rawTickets = e.ticket_types || e.ticketTypes || [];
+      const normalizedTickets = rawTickets.map((t: any) => ({
+        id: String(t.id), // ✅ Crucial : Forcer en String pour le Store
+        name: t.name || 'Billet Standard',
+        price: Number(t.price) || 0,
+        available: Number(t.available ?? (Number(t.quantity_total) - Number(t.quantity_sold || 0)) ?? 0),
+        max_per_order: Number(t.max_per_order) || 10,
+        description: t.description || ''
+      }));
+
+      return {
+        ...e,
+        location: e.location || 'Lieu non défini',
+        date: e.start_date || e.date || '',
+        endDate: e.end_date || '',
+        isFeatured: !!e.isFeatured,
+        isPublished: !!e.isPublished || e.status === 'published',
+        ticketTypes: normalizedTickets
+      };
+    });
+  };
 
   const getAll = useCallback(
   async (filters?: Record<string, string>): Promise<Event[]> => {
@@ -129,20 +147,24 @@ export const useEventAPI = () => {
     try {
       const formData = createOrUpdateFormData(data);
       const token = localStorage.getItem('access_token');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://api.awardsdan.com/api/v1'}${ENDPOINTS.events.create}`,
-        {
-          method: 'POST',
-          body: formData,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
-      );
-      if (!res.ok) throw new Error('Erreur lors de la création de l\'événement');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://api.awardsdan.com/api/v1';
+      
+      const res = await fetch(`${apiUrl}${ENDPOINTS.events.create}`, {
+        method: 'POST',
+        body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || 'Erreur lors de la création de l\'événement');
+      }
+
       const event: Event = await res.json();
       toast({ title: 'Succès', description: 'Événement créé avec succès' });
       return normalizeEvents([event])[0];
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de la création de l\'événement';
+      const message = err instanceof Error ? err.message : 'Erreur réseau lors de la création';
       setError(message);
       toast({ title: 'Erreur', description: message, variant: 'destructive' });
       return null;
@@ -157,16 +179,24 @@ export const useEventAPI = () => {
     try {
       const formData = createOrUpdateFormData(data);
       const token = localStorage.getItem('access_token');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://api.awardsdan.com/api/v1'}${ENDPOINTS.events.update(id.toString())}`,
-        { method: 'PATCH', body: formData, headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
-      if (!res.ok) throw new Error('Erreur lors de la mise à jour de l\'événement');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://api.awardsdan.com/api/v1';
+
+      const res = await fetch(`${apiUrl}${ENDPOINTS.events.update(id.toString())}`, {
+        method: 'PATCH',
+        body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || 'Erreur lors de la mise à jour de l\'événement');
+      }
+
       const event: Event = await res.json();
       toast({ title: 'Succès', description: 'Événement mis à jour avec succès' });
       return normalizeEvents([event])[0];
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de la mise à jour de l\'événement';
+      const message = err instanceof Error ? err.message : 'Erreur réseau lors de la mise à jour';
       setError(message);
       toast({ title: 'Erreur', description: message, variant: 'destructive' });
       return null;

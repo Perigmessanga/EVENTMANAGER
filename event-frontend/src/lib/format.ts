@@ -15,10 +15,14 @@ export function formatCurrency(amount: number, currency = CURRENCY.code): string
 }
 
 /**
- * Format date in French locale
+ * Format date in French locale safely
  */
-export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(dateString: string | null | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (!dateString) return 'Date à préciser';
+  
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Date invalide';
+
   const defaultOptions: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     year: 'numeric',
@@ -30,10 +34,14 @@ export function formatDate(dateString: string, options?: Intl.DateTimeFormatOpti
 }
 
 /**
- * Format date for compact display
+ * Format date for compact display safely
  */
-export function formatDateCompact(dateString: string): string {
+export function formatDateCompact(dateString: string | null | undefined): string {
+  if (!dateString) return '--/--';
+  
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '??';
+
   return date.toLocaleDateString('fr-CI', {
     day: '2-digit',
     month: 'short',
@@ -41,22 +49,44 @@ export function formatDateCompact(dateString: string): string {
 }
 
 /**
- * Format time
+ * Format time safely
  */
-export function formatTime(timeString: string): string {
+export function formatTime(timeString: string | null | undefined): string {
+  if (!timeString) return '--:--';
   return timeString;
 }
 
 /**
- * Format date and time together
+ * Extract and format local time from ISO date string
  */
-export function formatDateTime(dateString: string, timeString: string): string {
+export function formatLocalTime(dateString: string | null | undefined): string {
+  if (!dateString) return '--:--';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '--:--';
+
+  return date.toLocaleTimeString('fr-CI', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Africa/Abidjan' // GMT
+  });
+}
+
+/**
+ * Format date and time together safely
+ */
+export function formatDateTime(dateString: string | null | undefined, timeString?: string): string {
+  if (!dateString) return 'Date et heure à préciser';
+  
   const date = formatDate(dateString, {
     weekday: 'short',
     day: 'numeric',
     month: 'long',
   });
-  return `${date} à ${timeString}`;
+  
+  const time = timeString || formatLocalTime(dateString);
+  return `${date} à ${time}`;
 }
 
 /**

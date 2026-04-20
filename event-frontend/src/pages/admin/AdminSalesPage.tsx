@@ -69,46 +69,65 @@ export default function AdminSalesPage() {
       {/* COURBE EVOLUTION */}
       <div className="bg-white p-6 rounded-xl shadow h-96">
         <h2 className="font-semibold mb-4">Évolution Mensuelle</h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={sales.monthly_sales}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="revenue" />
-          </LineChart>
-        </ResponsiveContainer>
+        {sales.monthly_sales && sales.monthly_sales.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={sales.monthly_sales}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="revenue" stroke="#2563eb" />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground italic">
+            Aucune donnée d'évolution disponible
+          </div>
+        )}
       </div>
 
       {/* TOP 5 EVENTS */}
       <div className="bg-white p-6 rounded-xl shadow h-96">
         <h2 className="font-semibold mb-4">Top 5 Événements</h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sales.top_events}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="event__title" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="revenue" />
-          </BarChart>
-        </ResponsiveContainer>
+        {sales.top_events && sales.top_events.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={sales.top_events}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="event__title" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="revenue" fill="#3b82f6" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground italic">
+            Aucun événement vendu pour cette période
+          </div>
+        )}
       </div>
 
       {/* PIE CHART */}
       <div className="bg-white p-6 rounded-xl shadow h-96">
         <h2 className="font-semibold mb-4">Distribution Billets</h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={sales.ticket_distribution}
-              dataKey="total"
-              nameKey="ticket_type__name"
-              outerRadius={120}
-              label
-            />
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        {sales.ticket_distribution && sales.ticket_distribution.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={sales.ticket_distribution}
+                dataKey="total"
+                nameKey="ticket_type__name"
+                outerRadius={120}
+                fill="#8884d8"
+                label
+              />
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground italic">
+            Aucune distribution de billets disponible
+          </div>
+        )}
       </div>
 
     </div>

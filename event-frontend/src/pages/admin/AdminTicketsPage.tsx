@@ -39,15 +39,16 @@ export default function AdminTicketsPage() {
   }, []);
 
   const filteredTickets = useMemo(() => {
-    let data = tickets;
+    if (!Array.isArray(tickets)) return [];
+    let data = [...tickets];
 
     if (selectedEvent !== "all") {
-      data = data.filter((t) => String(t.event) === selectedEvent);
+      data = data.filter((t) => t && String(t.event) === selectedEvent);
     }
 
     if (search) {
       data = data.filter((t) =>
-        t.name.toLowerCase().includes(search.toLowerCase())
+        t && t.name && t.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -59,10 +60,13 @@ export default function AdminTicketsPage() {
     page * pageSize
   );
 
-  const totalRevenue = tickets.reduce(
-    (acc, t) => acc + t.quantity_sold * parseFloat(t.price),
-    0
-  );
+  const totalRevenue = useMemo(() => {
+    if (!Array.isArray(tickets)) return 0;
+    return tickets.reduce(
+      (acc, t) => acc + (Number(t.quantity_sold) || 0) * (parseFloat(t.price) || 0),
+      0
+    );
+  }, [tickets]);
 
   const exportCSV = () => {
     const headers = [

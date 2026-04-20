@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useNavigate, NavLink } from 'react-router-dom';
+import { Outlet, useNavigate, NavLink, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
-import { XCircle, Menu, X } from 'lucide-react';
+import { XCircle, Menu, X, Home, ChevronRight, LogOut, LayoutDashboard, Calendar, ShoppingCart, Ticket, Settings, BarChart3 } from 'lucide-react';
 
 export function AdminLayout() {
-  const { user, isAuthenticated, checkAuth, hasRole } = useAuthStore();
+  const { user, isAuthenticated, checkAuth, hasRole, logout } = useAuthStore();
   const navigate = useNavigate();
-  // État pour ouvrir/fermer la sidebar sur mobile
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -20,13 +20,34 @@ export function AdminLayout() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Fermer le menu mobile lors d'un changement de page
   const closeMenu = () => setIsMobileMenuOpen(false);
+
+  // Génération dynamique du fil d'Ariane
+  const pathnames = location.pathname.split('/').filter((x) => x);
+  const breadcrumbs = pathnames.map((value, index) => {
+    const last = index === pathnames.length - 1;
+    const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+    
+    return {
+      label: value.charAt(0).toUpperCase() + value.slice(1),
+      to,
+      active: last
+    };
+  });
+
+  const menuItems = [
+    { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
+    { to: "/admin/events", label: "Événements", icon: Calendar },
+    { to: "/admin/orders", label: "Commandes", icon: ShoppingCart },
+    { to: "/admin/tickets", label: "Tickets", icon: Ticket },
+    { to: "/admin/sales", label: "Ventes", icon: BarChart3 },
+    { to: "/admin/settings", label: "Paramètres", icon: Settings },
+  ];
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Chargement du dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -42,83 +63,124 @@ export function AdminLayout() {
           <p className="text-muted-foreground mb-6">
             Vous n'avez pas les droits d'accès à cette section.
           </p>
-          <NavLink to="/">
+          <Link to="/">
             <Button>Retour à l'accueil</Button>
-          </NavLink>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background relative">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 relative font-sans">
       
-      {/* Overlay pour fermer le menu mobile en cliquant à côté */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-fade-in" 
           onClick={closeMenu}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Moderne */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border p-4 flex flex-col transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:flex
       `}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Admin Dashboard</h2>
-          {/* Bouton pour fermer sur mobile uniquement */}
-          <button className="md:hidden" onClick={closeMenu}>
-            <X className="h-6 w-6" />
+        <div className="flex items-center justify-between mb-10">
+          <Link to="/admin" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
+              E
+            </div>
+            <h2 className="text-xl font-display font-bold tracking-tight text-slate-900 dark:text-white">EventAdmin</h2>
+          </Link>
+          <button className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg" onClick={closeMenu}>
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="flex flex-col gap-2">
-          {[
-            { to: "/admin", label: "Overview", end: true },
-            { to: "/admin/events", label: "Événements" },
-            { to: "/admin/orders", label: "Commandes" },
-            { to: "/admin/tickets", label: "Tickets" },
-            { to: "/admin/sales", label: "Ventes" },
-            { to: "/admin/settings", label: "Paramètres" },
-          ].map((link) => (
+        <nav className="flex flex-col gap-1.5 flex-1">
+          {menuItems.map((item) => (
             <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
+              key={item.to}
+              to={item.to}
+              end={item.end}
               onClick={closeMenu}
               className={({ isActive }) =>
-                `px-3 py-2 rounded transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent'}`
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group ${
+                  isActive 
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' 
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                }`
               }
             >
-              {link.label}
+              <item.icon className="h-4 w-4" />
+              {item.label}
             </NavLink>
           ))}
         </nav>
+
+        <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl px-4"
+            onClick={logout}
+          >
+            <LogOut className="h-4 w-4" />
+            Déconnexion
+          </Button>
+        </div>
       </aside>
 
       {/* Contenu principal */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-border flex items-center px-6 gap-4 bg-card/50 backdrop-blur-sm sticky top-0 z-30">
-          {/* Bouton Hamburger mobile */}
-          <button 
-            className="md:hidden p-2 hover:bg-accent rounded-md" 
-            onClick={() => setIsMobileMenuOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-          
-          <h1 className="text-lg md:text-2xl font-bold truncate">
-            Bienvenue {user.email}
-          </h1>
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top Navbar */}
+        <header className="h-16 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+            <button 
+              className="md:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800" 
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            
+            {/* Breadcrumbs */}
+            <nav className="hidden sm:flex items-center gap-2 text-xs font-medium">
+              <Link to="/admin" className="text-slate-400 hover:text-primary transition-colors">Admin</Link>
+              {breadcrumbs.map((crumb, i) => (
+                <div key={crumb.to} className="flex items-center gap-2">
+                  <ChevronRight className="h-3 w-3 text-slate-300" />
+                  <Link 
+                    to={crumb.to} 
+                    className={crumb.active ? 'text-slate-900 dark:text-white font-bold' : 'text-slate-400 hover:text-primary transition-colors'}
+                  >
+                    {crumb.label}
+                  </Link>
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link to="/">
+              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 rounded-full border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all">
+                <Home className="h-3.5 w-3.5" />
+                Voir le site public
+              </Button>
+            </Link>
+            
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs">
+              {user.email.charAt(0).toUpperCase()}
+            </div>
+          </div>
         </header>
 
-        <div className="flex-1 p-6 overflow-auto">
-          <Outlet />
+        <div className="flex-1 p-4 md:p-8 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto h-full">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>
   );
-}
+}

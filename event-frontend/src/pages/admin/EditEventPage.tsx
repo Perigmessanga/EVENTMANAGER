@@ -56,42 +56,61 @@ export default function EditEventPage() {
     if (!id) return;
     
     const loadEvent = async () => {
-      const event = await getById(Number(id));
-      if (event) {
-        const startDate = new Date(event.start_date);
-        const endDate = new Date(event.end_date);
+      try {
+        const event = await getById(Number(id));
+        if (event) {
+          // Utilisation de dates sécurisées
+          const startDate = event.start_date ? new Date(event.start_date) : new Date();
+          const endDate = event.end_date ? new Date(event.end_date) : startDate;
 
-        setFormData({
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          start_date: startDate.toISOString().split('T')[0],
-          start_time: startDate.toTimeString().slice(0, 5),
-          end_date: endDate.toISOString().split('T')[0],
-          end_time: endDate.toTimeString().slice(0, 5),
-          capacity: event.capacity.toString(),
-          ticket_price: event.ticket_price.toString(),
-          status: event.status,
-        });
+          setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            location: event.location || '',
+            start_date: isNaN(startDate.getTime()) ? '' : startDate.toISOString().split('T')[0],
+            start_time: isNaN(startDate.getTime()) ? '00:00' : startDate.toTimeString().slice(0, 5),
+            end_date: isNaN(endDate.getTime()) ? '' : endDate.toISOString().split('T')[0],
+            end_time: isNaN(endDate.getTime()) ? '00:00' : endDate.toTimeString().slice(0, 5),
+            capacity: (event.capacity || 0).toString(),
+            ticket_price: (event.ticket_price || 0).toString(),
+            status: event.status || 'draft',
+          });
 
-        if (event.image) {
-          setImagePreview(event.image);
-        }
+          if (event.image) {
+            setImagePreview(event.image);
+          }
 
-        if (event.ticketTypes) {
-          setTicketTypes(event.ticketTypes.map(t => ({
-            name: t.name,
-            price: t.price.toString(),
-            quantity_total: t.available.toString(), // or quantity_total if available in API
-            description: t.description
-          })));
+          if (event.ticketTypes && event.ticketTypes.length > 0) {
+            setTicketTypes(event.ticketTypes.map(t => ({
+              id: t.id,
+              name: t.name || '',
+              price: (t.price || 0).toString(),
+              quantity_total: (t.quantity_total || t.available || 0).toString(),
+              description: t.description || ''
+            })));
+          } else {
+            setTicketTypes([
+              { name: 'Standard', price: (event.ticket_price || 0).toString(), quantity_total: (event.capacity || 0).toString(), description: 'Entrée standard' }
+            ]);
+          }
         } else {
-          setTicketTypes([
-            { name: 'Standard', price: event.ticket_price.toString(), quantity_total: event.capacity.toString(), description: 'Entrée standard' }
-          ]);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les données de l'événement.",
+            variant: "destructive"
+          });
+          navigate('/admin/events');
         }
+      } catch (err) {
+        console.error("❌ Erreur chargement EditEventPage:", err);
+        toast({
+          title: "Erreur de chargement",
+          description: "Une erreur est survenue lors de la récupération des données.",
+          variant: "destructive"
+        });
+      } finally {
+        setInitialLoading(false);
       }
-      setInitialLoading(false);
     };
 
     loadEvent();
@@ -133,32 +152,57 @@ export default function EditEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!id) return;
+    if (!id || isLoading) return;
 
-    const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`).toISOString();
-    const endDateTime = new Date(`${formData.end_date}T${formData.end_time}`).toISOString();
+    try {
+      // Validation basique
+      if (!formData.start_date || !formData.start_time) {
+        toast({
+          title: 'Données manquantes',
+          description: "La date et l'heure de début sont obligatoires.",
+          variant: 'destructive',
+        });
+        return;
+      }
 
-    const eventData = {
-      title: formData.title,
-      description: formData.description,
-      location: formData.location,
-      start_date: startDateTime,
-      end_date: endDateTime,
-      capacity: parseInt(formData.capacity),
-      ticket_price: parseFloat(formData.ticket_price) || 0,
-      status: formData.status as 'draft' | 'published' | 'cancelled' | 'completed',
-      ticketTypes: ticketTypes.map(t => ({
-        name: t.name,
-        price: parseFloat(t.price) || 0,
-        quantity_total: parseInt(t.quantity_total) || 0,
-        description: t.description
-      })),
-      ...(imageFile && { image: imageFile }),
-    };
+      const startDateTime = new Date(`${formData.start_date}T${formData.start_time}`).toISOString();
+      const endDateTime = formData.end_date && formData.end_time 
+        ? new Date(`${formData.end_date}T${formData.end_time}`).toISOString()
+        : startDateTime;
 
-    const result = await update(Number(id), eventData);
-    if (result) {
-      navigate('/admin/events');
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        start_date: startDateTime,
+        end_date: endDateTime,
+        capacity: parseInt(formData.capacity) || 0,
+        ticket_price: parseFloat(formData.ticket_price) || 0,
+        status: formData.status as 'draft' | 'published' | 'cancelled' | 'completed',
+        ticketTypes: ticketTypes.map(t => ({
+          name: t.name || 'Billet',
+          price: parseFloat(t.price) || 0,
+          quantity_total: parseInt(t.quantity_total) || 0,
+          description: t.description || ''
+        })),
+        ...(imageFile && { image: imageFile }),
+      };
+
+      const result = await update(Number(id), eventData);
+      
+      if (result) {
+        // Délai de sécurité pour la redirection
+        setTimeout(() => {
+          navigate('/admin/events');
+        }, 500);
+      }
+    } catch (error) {
+      console.error('[ERROR] Échec modification événement:', error);
+      toast({
+        title: 'Erreur système',
+        description: "Une erreur est survenue lors de l'enregistrement.",
+        variant: 'destructive',
+      });
     }
   };
 

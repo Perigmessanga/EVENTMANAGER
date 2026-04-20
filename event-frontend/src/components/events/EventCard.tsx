@@ -42,7 +42,7 @@ export function EventCard({ event, variant = 'default', className }: EventCardPr
             </h3>
             <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {formatDateCompact(event.date)} • {event.venue}
+              {formatDateCompact(event.date)} • {event.location || "Lieu non défini"}
             </p>
             <p className="text-sm font-bold text-primary mt-2">
               À partir de {formatCurrency(lowestPrice)}
@@ -96,7 +96,7 @@ export function EventCard({ event, variant = 'default', className }: EventCardPr
                 </span>
                 <span className="flex items-center gap-1.5 backdrop-blur-sm bg-white/10 px-2.5 py-1 rounded-full">
                   <MapPin className="h-4 w-4" />
-                  {event.venue || event.location || event.address}
+                  {event.location || "Lieu non défini"}
                 </span>
               </div>
               <div className="mt-4 flex items-center justify-between">
@@ -157,7 +157,7 @@ export function EventCard({ event, variant = 'default', className }: EventCardPr
           
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-2">
             <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate">{(event.venue || event.location || event.address) + (event.city ? `, ${event.city}` : '')}</span>
+            <span className="truncate">{event.location || "Lieu non défini"}</span>
           </div>
           
           <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between">

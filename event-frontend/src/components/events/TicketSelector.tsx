@@ -19,8 +19,9 @@ export function TicketSelector({ event, onContinue }: TicketSelectorProps) {
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
     (event?.ticketTypes || []).forEach(ticket => {
-      const cartItem = getItemByTicketType(ticket.id);
-      initial[ticket.id] = cartItem?.quantity || 0;
+      const ticketId = String(ticket.id);
+      const cartItem = getItemByTicketType(ticketId);
+      initial[ticketId] = cartItem?.quantity || 0;
     });
     return initial;
   });
@@ -30,20 +31,23 @@ export function TicketSelector({ event, onContinue }: TicketSelectorProps) {
   }
 
   const handleQuantityChange = (ticketType: TicketType, delta: number) => {
-    const current = localQuantities[ticketType.id] || 0;
+    const ticketId = String(ticketType.id);
+    const current = localQuantities[ticketId] || 0;
     const newQuantity = Math.max(
       0,
-      Math.min(current + delta, ticketType.max_per_order, ticketType.available)
+      Math.min(current + delta, Number(ticketType.max_per_order) || 10, Number(ticketType.available) || 0)
     );
+
+    console.log(`🎫 Changement quantité Ticket ${ticketId}: ${current} -> ${newQuantity}`);
 
     setLocalQuantities(prev => ({
       ...prev,
-      [ticketType.id]: newQuantity,
+      [ticketId]: newQuantity,
     }));
 
-    if (newQuantity === 0) removeItem(ticketType.id);
+    if (newQuantity === 0) removeItem(ticketId);
     else if (current === 0 && newQuantity > 0) addItem(event, ticketType, newQuantity);
-    else updateQuantity(ticketType.id, newQuantity);
+    else updateQuantity(ticketId, newQuantity);
   };
 
   const totalSelected = Object.values(localQuantities).reduce((sum, q) => sum + q, 0);
